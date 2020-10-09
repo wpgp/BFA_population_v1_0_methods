@@ -67,7 +67,7 @@ predict <- readRDS(paste0(data_path, "/BFA_population_v1_0_predict.rds"))
 age_sex <- read.csv(paste0(data_path, "/BFA_population_v1_0_agesex.csv"), stringsAsFactors = F)
 
 # mastergrid to convert back the prediction into raster format
-masterGrid <- raster(paste0(data_path, "/masterGrid.tif"))
+masterGrid <- raster(paste0(data_path, "/BFA_population_v1_0_mastergrid.tif"))
 ```
 
 We prepare the predictors and the response variable.
