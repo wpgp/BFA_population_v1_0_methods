@@ -4,6 +4,15 @@ Edith Darin, WorldPop
 
 
 
+  - [Introduction](#introduction)
+  - [Environment setup](#environment-setup)
+  - [Training the model](#training-the-model)
+  - [Predicting the population](#predicting-the-population)
+  - [Gridding the predicted pop](#gridding-the-predicted-pop)
+  - [Disaggregating by age and sex
+    groups](#disaggregating-by-age-and-sex-groups)
+  - [References](#references)
+
 # Introduction
 
 This document presents the data and R code used to estimate the top down
@@ -16,7 +25,8 @@ Please note that we used only their scripts aiming at estimating the
 model. All the pre-processing of the data input was done directly in our
 custom scripts as well as the prediction.
 
-The data can be found in here \[TO BE COMPLETED WHEN RELEASED\].
+The data can be found here \[TO BE COMPLETED WHEN RELEASED\]. Supporting
+scripts are in the `scripts`folder.
 
 # Environment setup
 

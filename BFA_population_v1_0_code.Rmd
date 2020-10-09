@@ -4,7 +4,9 @@ author: "Edith Darin, WorldPop"
 always_allow_html: true
 header-includes:
    - \usepackage{amsmath}
-output: rmarkdown::github_document
+output:
+  github_document:
+    toc: true
 geometry: margin=2.1cm
 documentclass: article
 bibliography: [book.bib]
@@ -25,7 +27,7 @@ This document presents the data and R code used to estimate the top down model f
 
 Please note that we used only their scripts aiming at estimating the model. All the pre-processing of the data input was done directly in our custom scripts as well as the prediction.
 
-The data can be found in here [TO BE COMPLETED WHEN RELEASED].
+The data can be found here [TO BE COMPLETED WHEN RELEASED]. Supporting scripts are in the `scripts`folder.
 
 # Environment setup
 
