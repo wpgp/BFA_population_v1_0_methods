@@ -1,44 +1,37 @@
----
-title: "Top-down disaggregation of Burkina Faso 2019 census - Scripts"
-author: "Edith Darin, WorldPop"
-always_allow_html: true
-header-includes:
-   - \usepackage{amsmath}
-output: rmarkdown::github_document
-geometry: margin=2.1cm
-documentclass: article
-bibliography: [book.bib]
-biblio-style: apalike
----
+Top-down disaggregation of Burkina Faso 2019 census - Scripts
+================
+Edith Darin, WorldPop
 
-```{r, echo=FALSE}
-knitr::opts_knit$set(root.dir = "C:/Users/ecd1u18/Documents/BFA_population_v1_0_methods" )
-knitr::opts_chunk$set(message = FALSE, echo = T, warning = FALSE, eval = FALSE)
-root_path <-  "C:/Users/ecd1u18/Documents/BFA_population_v1_0_methods/scripts"
-data_path <- "C:/Users/ecd1u18/Documents/BFA_population_v1_0_methods/data"
-output_path <-"//worldpop.files.soton.ac.uk/worldpop/Projects/WP517763_GRID3/Working/BFA/model"
-```
+
 
 # Introduction
 
-This document presents the data and R code used to estimate the top down model for disaggregating 2019 Burkina Faso census totals [@institutnationaldelastatistiqueetdeladémographie2019]. It is mainly based on scripts developed by Bondarenko for the WorldPop project [@bondarenko2018].
+This document presents the data and R code used to estimate the top down
+model for disaggregating 2019 Burkina Faso census totals (Institut
+National de la Statistique et de la Démographie 2019). It is mainly
+based on scripts developed by Bondarenko for the WorldPop project
+(Bondarenko et al. 2018).
 
-Please note that we used only their scripts aiming at estimating the model. All the pre-processing of the data input was done directly in our custom scripts as well as the prediction.
+Please note that we used only their scripts aiming at estimating the
+model. All the pre-processing of the data input was done directly in our
+custom scripts as well as the prediction.
 
-The data can be found in here [TO BE COMPLETED WHEN RELEASED].
+The data can be found in here \[TO BE COMPLETED WHEN RELEASED\].
 
 # Environment setup
 
-We had first to configure the setting specifically for Burkina Faso as specified in Bondarenko [@bondarenko2018], that can be seen in the `input_BFA.R` script.
+We had first to configure the setting specifically for Burkina Faso as
+specified in Bondarenko (Bondarenko et al. 2018), that can be seen in
+the `input_BFA.R` script.
 
-```{r}
+``` r
 source(paste0(root_path,"/input_BFA.R"))
-
 ```
 
-Then we need to load all the required functions for estimating the tRandom Forest model for population modelling.
+Then we need to load all the required functions for estimating the
+tRandom Forest model for population modelling.
 
-```{r setup}
+``` r
 source(paste0(root_path,"/config.R"))
 source(paste0(root_path,"/load_Packages.R"))
 source(paste0(root_path,"/internal_functions.R"))  
@@ -47,37 +40,16 @@ source(paste0(root_path,"/rf_functions.R"))
 
 if (!load.Packages())
   stop("There was an error when loading R packages")
-
-
 ```
 
 We create all the necessary directories for the estimation.
 
-```{r, echo=F}
-glPaths <- create_dirs_for_prj(paste0(output_path, "/topdown/"))  
-
-##  Get the paths to the countries' data:
-rfg.data.path.countries <- glPaths$data
-##  Declare where we are outputting things:
-rfg.output.path.countries <- glPaths$output
-##  Declare where we are outputting things:
-rfg.output.path.countries.cvr <- glPaths$data_cvr
-##  Declare where our temporary path is:
-rfg.output.path.countries.tmp <- paste0(rfg.output.path.countries, "tmp/")
-##  Retrieve the country tag:
-rfg.countries.tag <- glPaths$countries_tag
-
-
-##  Remove unnecessary items:
-rm(glPaths)
-
-```
-
 # Training the model
 
-We load the data. The data are in a table format with each row being an admin 3.
+We load the data. The data are in a table format with each row being an
+admin 3.
 
-```{r}
+``` r
 source(paste0(root_path,"/variable_names.R")) 
 
 train <- readRDS(paste0(data_path, "/BFA_population_v1_0_train.rds"))
@@ -86,13 +58,11 @@ age_sex <- read.csv(paste0(data_path, "/BFA_population_v1_0_agesex.csv"), string
 
 # mastergrid to convert back the prediction into raster format
 masterGrid <- raster(paste0(data_path, "/masterGrid.tif"))
-
 ```
 
 We prepare the predictors and the response variable.
 
-```{r}
-
+``` r
 # Predictors
 cov_names <- colnames(train)
 cov_names <- cov_names[5:(length(cov_names)-19)]
@@ -103,12 +73,11 @@ x_data <- train[,cov_names]
 # Response variable: population per sum of settled pixel size
 
 y_data <- log(as.numeric(train$pop_density_pixels))
-
 ```
 
 We train the model.
 
-```{r}
+``` r
 ## Fit the RF, removing any covariates which are not important to the model:
 popfit <- get_popfit()
 
@@ -118,20 +87,22 @@ popfit_final <- get_popfit_final()
 
 # Predicting the population
 
-We prepare the prediction data set in a table format with each row being a settled pixel.
+We prepare the prediction data set in a table format with each row being
+a settled pixel.
 
-```{r}
+``` r
 cov_names <- names(popfit_final$forest$xlevels)
 cov_predict <- predict[, ..cov_names]
 cov_predict$admin3_id <- predict$admin3_id
 cov_predict$masterGrid_id <- predict$masterGrid_id
 cov_predict$settledArea <- predict$settledArea_V3
-
 ```
 
-We define the function that predict density at pixel level and convert it to a weight which is mutliply by the total census count of the related admin 3.
+We define the function that predict density at pixel level and convert
+it to a weight which is mutliply by the total census count of the
+related admin 3.
 
-```{r}
+``` r
 predict_weights <- function(df, census, model=popfit_final){
   prediction_set <- predict(model, 
                             newdata=df, 
@@ -146,12 +117,12 @@ predict_weights <- function(df, census, model=popfit_final){
   fwrite(output, paste0(output_path, "/topdown/output/prediction/predictions_",
                         df$admin3_id[1], ".csv"))
 }
-
 ```
 
-We run the prediction in parallel mode, each batch containing all the pixels of a given admin 3;
+We run the prediction in parallel mode, each batch containing all the
+pixels of a given admin 3;
 
-```{r}
+``` r
 cov_predict_list <- as.data.frame(cov_predict) %>% 
   group_by(admin3_id) %>% 
   group_split()
@@ -172,15 +143,14 @@ predicted <- foreach(
 
 stopCluster(cl)
 toc() #30sec
-
-
 ```
 
 # Gridding the predicted pop
 
-We convert the prediction tables into a raster representing the gridded population.
+We convert the prediction tables into a raster representing the gridded
+population.
 
-```{r}
+``` r
 # reading in the predictions
 predictions_list <- list.files(
   paste0(output_path, "/topdown/output/prediction/"), pattern = ".csv") 
@@ -218,9 +188,10 @@ writeRaster(r,
 
 # Disaggregating by age and sex groups
 
-To obtain age and sex disaggregation at pixel level, we multiply the predicted population count by the national age and sex proportions.
+To obtain age and sex disaggregation at pixel level, we multiply the
+predicted population count by the national age and sex proportions.
 
-```{r}
+``` r
 for(i in 1:(ncol(age_sex)-1)){
   prop <- age_sex[1,i] %>% unlist()
   print(names(prop))
@@ -235,3 +206,23 @@ for(i in 1:(ncol(age_sex)-1)){
 ```
 
 # References
+
+<div id="refs" class="references hanging-indent">
+
+<div id="ref-bondarenko2018">
+
+Bondarenko, Maksym, Jeremiah Nieves, Alessandro Sorichetta, Forrest R
+Stevens, Andrea E Gaughan, Andrew Tatem, and others. 2018. “WpgpRFPMS:
+WorldPop Random Forests Population Modelling R Scripts, Version 0.1. 0.”
+
+</div>
+
+<div id="ref-institutnationaldelastatistiqueetdeladémographie2019">
+
+Institut National de la Statistique et de la Démographie. 2019.
+*Recensement Général de La Population et de L’habitation de 2019 Du
+Burkina Faso - Résultats Provisoires*. INSD Ouagadougou, Burkina Faso.
+
+</div>
+
+</div>
