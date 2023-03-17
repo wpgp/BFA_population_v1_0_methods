@@ -25,7 +25,7 @@ Please note that we used only their scripts aiming at estimating the
 model. All the pre-processing of the data input was done directly in our
 custom scripts as well as the prediction.
 
-The data can be found here \[TO BE COMPLETED WHEN RELEASED\]. Supporting
+The data can be found [here](https://wopr.worldpop.org/?BFA/Population/v1.1). Supporting
 scripts are in the `scripts`folder.
 
 # Environment setup
